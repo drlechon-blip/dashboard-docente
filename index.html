@@ -93,7 +93,7 @@ tr:hover td{background:#f8fafc}
 <div id="dashContent" style="display:none">
 <div class="hdr"><div class="hdr-i">
   <div><h1>&#128202; Asignaci&#243;n Docente &middot; Curso 2026-27</h1><div class="sub">Dpto. Medicina &middot; Universidad Europea</div></div>
-  <div class="meta">v22 &middot; 09/06/2026 14:49<br>66 profesores &middot; 27 asignaturas</div>
+  <div class="meta">v22 &middot; 09/06/2026 15:01<br>66 profesores &middot; 27 asignaturas</div>
 </div></div>
 
 <div class="tabs-wrap"><div class="tabs">
@@ -713,29 +713,20 @@ function rHor(){
   var any=cur||grp||asig2||prof2;
   gi('hEmpty').style.display=any?'none':'block';
   if(!any){gi('hGrid').innerHTML='';gi('hCount').textContent='';return;}
-  // Include exact group AND its subgroups (prefix match e.g. M21 → M21A, M21B)
   var evs=EVENTS.filter(function(e){
     if(cur&&e.c!==cur)return false;
     if(grp){
-      var exactMatch=e.g===grp;
-      var subgroupMatch=e.g.length>grp.length&&e.g.indexOf(grp)===0;
-      if(!exactMatch&&!subgroupMatch)return false;
+      // Rule: show parent group (theory) + B subgroups (practice only)
+      // Never show A subgroups
+      var isParent=e.g===grp;
+      var isBsub=(e.g.length===grp.length+1&&e.g.slice(0,-1)===grp&&e.g[e.g.length-1]==='B');
+      if(!isParent&&!isBsub)return false;
     }
     if(asig2&&e.a!==asig2)return false;
     if(prof2&&e.p!==prof2)return false;
     if(e.s!=='BOTH'&&e.s!==hSem)return false;
     return true;
   });
-  // Remove subgroup practices that share the same day+hour as parent theory
-  // (e.g. IPC M21A practice at Martes 8:30 = same slot as M21 theory → hide it)
-  if(grp){
-    var tSlots={};
-    evs.forEach(function(e){if(e.g===grp&&e.t==='T')tSlots[e.d+'|'+e.h]=1;});
-    evs=evs.filter(function(e){
-      if(e.g!==grp&&e.g.indexOf(grp)===0&&e.t==='P'&&tSlots[e.d+'|'+e.h])return false;
-      return true;
-    });
-  }
   gi('hCount').textContent=evs.length?evs.length+' sesiones':'';
   if(!evs.length){gi('hGrid').innerHTML='<div class="empty">Sin clases con los filtros seleccionados</div>';return;}
   var ck=(asig2&&!cur&&!grp&&!prof2)?'g':'a';
